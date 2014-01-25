@@ -19,12 +19,6 @@ require 'optparse'
 
 # Default options
 options = {}
-# The filename of each qr code will be the bracketed part of the regex,
-# applied to the URL used to generate the qr code.
-# For the url https://foo.bar/baz/1234
-# with the regex ".*(\d+)"
-# the file will be named 1234.png
-options[:regex] = /.*?(\d+)$/
 options[:dir] = Dir.pwd
 options[:size]= 400
 # These cannot be changed on the command line at present
@@ -38,13 +32,9 @@ parser = OptionParser.new do |opts|
 Batch QR Code Generator
 ```````````````````````
 Usage: #{prog_name} [options] input-file
-       `input-file' should contain a newline-delimited list of URLs to be  
+       `input-file' should contain a newline-delimited list of URLs to be
        encoded as QR codes.
 END_BANNER
-  opts.on "-r REGEX", "--regex",
-          "Extracts the filename of the QR code from the URL" do |regex|
-    options[:regex] = regex
-  end
   opts.on "-d DIR", "--directory",
           "Where the QR codes will be saved" do |dir|
     options[:dir] = dir
@@ -80,7 +70,7 @@ File.open ARGV[0], "r" do |file|
   while line = file.gets
     request_url = base_url + "&chl=#{line}"
     request_url.chomp!
-    file_name = request_url.sub options[:regex], "\\1"
+    file_name = line.strip
     system <<END_REQUEST
 wget\
   --quiet\
@@ -91,7 +81,7 @@ mv #{file_name}.png #{options[:dir]}/
 END_REQUEST
     # Output progress in orders of magnitude to prevent scroll blindness
     counter_magnitude = counter.to_s.length
-    print "\b" * counter_magnitude 
+    print "\b" * counter_magnitude
     #if counter % divisor == 0
       print "#{counter}"
     #end
